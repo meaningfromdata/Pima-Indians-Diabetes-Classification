@@ -109,4 +109,93 @@ df_combined_upsamp.Outcome.value_counts()
 
 
 
+### import sklearn functions for K-Nearest Neighbors Clasifier and train/test split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
 
+### split data into features and target
+X = df_combined_upsamp.iloc[:,:-1]
+y = df_combined_upsamp.iloc[:, -1]
+
+### split into train/test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.3, random_state=100)
+
+
+### check dimensions of train/test data
+print(X_train.shape)
+print(X_test.shape)
+print(y_train.size)
+print(y_test.size)
+
+### instantiate and fit knn model
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+
+
+### predict on test set and assess accuracy
+y_pred = knn.predict(X_test)
+print('Accuracy of knn on test set: {:.2f}'.format(knn.score(X_test, y_test)))
+
+
+### import libraries for cross-validation 
+from sklearn import model_selection
+from sklearn.model_selection import cross_val_score
+
+
+### Perform 10-fold cross-validation and compute mean accuracy over folds
+kfold = model_selection.KFold(n_splits=10)
+modelCV = KNeighborsClassifier(n_neighbors=5)
+scoring = 'accuracy'
+results = cross_val_score(modelCV, X_train, y_train, cv=kfold, scoring=scoring)
+print("10-fold cross-validation mean accuracy: %.3f" % (results.mean()))
+
+
+
+
+### confusion matrix metrics and visualization
+from sklearn.metrics import confusion_matrix
+
+confusion_matrix = confusion_matrix(y_test, y_pred)
+print(confusion_matrix)
+
+plt.figure(figsize=(9,9))
+sns.heatmap(confusion_matrix, annot=True, fmt=".1f", linewidths=.5, square = True, cmap = 'Blues_r');
+plt.ylabel('Actual label');
+plt.xlabel('Predicted label');
+acc_title = 'Accuracy Score: {0}'.format(round(results.mean(),2))
+plt.title(acc_title, size = 15);
+
+
+
+
+### Compute ROC Curve and Plot
+### calculate the fpr and tpr for all thresholds of the classification
+from sklearn.metrics import roc_curve, auc
+
+fpr, tpr, threshold = roc_curve(y_test, y_pred)
+roc_auc = auc(fpr, tpr)
+
+
+plt.title('ROC')
+plt.plot(fpr, tpr, 'b', label='AUC = %0.2f'% roc_auc)
+plt.legend(loc='lower right')
+plt.plot([0,1],[0,1],'r--')
+plt.xlim([-0.025, 1.025])  # just giving a little padding to plot range
+plt.ylim([-0.025, 1.025])
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.show()
+
+
+
+### show validation curves for different number of neighbors used to fit KNN
+from sklearn.learning_curve import validation_curve
+neighbors = np.arange(1, 20)
+train_score, val_score = validation_curve(KNeighborsClassifier(), X, y, 'n_neighbors', neighbors, cv=10)
+
+plt.plot(neighbors, np.median(train_score, 1), color='blue', label='training score')
+plt.plot(neighbors, np.median(val_score, 1), color='red', label='validation score')
+plt.legend(loc='best')
+plt.ylim(0, 1)
+plt.xlabel('neighbors')
+plt.ylabel('score');

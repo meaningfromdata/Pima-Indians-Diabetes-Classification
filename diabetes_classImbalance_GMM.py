@@ -5,12 +5,14 @@ Created on Wed Mar 14 11:43:16 2018
 @author: David
 
 parts of code adapted from code here:
-    http://www.blopig.com/blog/2017/07/using-random-forests-in-python-with-scikit-learn/
     https://www.kaggle.com/dbsnail/diabetes-prediction-over-0-86-accuracy
     https://towardsdatascience.com/building-a-logistic-regression-in-python-step-by-step-becd4d56c9c8
     
 class imbalance adapted partly from:
     https://elitedatascience.com/imbalanced-classes
+    
+ROC Curve plotting adapted from:
+    https://datamize.wordpress.com/2015/01/24/how-to-plot-a-roc-curve-in-scikit-learn/
 
 
 """
@@ -20,7 +22,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-# from scipy.stats import spearmanr, pearsonr
 plt.style.use('ggplot')
 
 
@@ -42,15 +43,12 @@ di_df.Outcome.value_counts()
 
 
 
-''' MAYBE COUNT ZERO VALUES HERE (ARE THESE LEGIT DATA VALUES?)
+
 ### Check how many columns contain missing data
 print(di_df.isnull().any().sum(), ' / ', len(di_df.columns))
 
 ### Check how many entries in total are missing 
 print(di_df.isnull().any(axis=1).sum(), ' / ', len(di_df))
-'''
-
-
 
 
 
@@ -106,6 +104,34 @@ df_combined_upsamp = pd.concat([df_maj, df_min_upsamp])
 ### Display new class counts
 df_combined_upsamp.Outcome.value_counts()
 
+
+
+### split data into features and target
+X = df_combined_upsamp.iloc[:,:-1]
+y = df_combined_upsamp.iloc[:, -1]
+
+
+### import sklearn functions for PCA 
+from sklearn.decomposition import PCA 
+pca = PCA(n_components=2)
+pca.fit(X)
+X_2D = pca.transform(X)
+
+df_combined_upsamp['PCA1'] = X_2D[:, 0]
+df_combined_upsamp['PCA2'] = X_2D[:, 1]
+
+sns.lmplot('PCA1','PCA2', hue='Outcome', data=df_combined_upsamp, fit_reg=False)
+
+
+#### import sklearn functions for Gaussian Mixture Model
+from sklearn.mixture import GMM
+gmm = GMM(n_components=2, covariance_type='full')
+gmm.fit(X)
+y_gmm = gmm.predict(X)
+
+df_combined_upsamp['cluster'] = y_gmm
+
+sns.lmplot('PCA1','PCA2', hue='cluster', data=df_combined_upsamp, fit_reg=False)
 
 
 

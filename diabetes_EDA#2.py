@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.stats import spearmanr, pearsonr
+# from scipy.stats import spearmanr, pearsonr
 plt.style.use('ggplot')
 
 
@@ -28,9 +28,16 @@ warnings.filterwarnings('ignore')
 '''
 
 
-
-### read CSV file containing BR census data
+### read CSV file containing BR census data 
+### data from https://github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv
 di_df = pd.read_csv('C:\\Users\\David\\Documents\\Data Science Related\\Datasets\\pima-indians-diabetes\\diabetes.csv')
+# di_df = pd.read_table('https://github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv')
+# di_df = pd.read_csv('https://github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv', sep=',', header=[0], index_col=0)
+# di_df = pd.read_csv('https://raw.githubusercontent.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv')
+# di_df = pd.read_csv('https://raw.github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv')
+
+di_df.to_csv('C:\\Users\\David\\Documents\\Data Science Related\\Datasets\\pima-indians-diabetes\\diabetes_fromPandas.csv')
+
 
 
 ### Check how many columns contain missing data
@@ -38,24 +45,21 @@ print(di_df.isnull().any().sum(), ' / ', len(di_df.columns))
 
 ### Check how many entries in total are missing 
 print(di_df.isnull().any(axis=1).sum(), ' / ', len(di_df))
+
+
+### see how many 0's there are in each column.  Some of these 0's entries need to be imputed  
+print(di_df.apply(pd.value_counts).head())
 
 
 ### glimpse summary statistics for each column 
-di_df.describe()
+print(di_df.describe())
 
 
 ### checking class balance (levels of Outcome variable)
-di_df.Outcome.value_counts()
+print(di_df.Outcome.value_counts())
 
 
 
-''' MAYBE COUNT ZERO VALUES HERE (ARE THESE LEGIT DATA VALUES?)
-### Check how many columns contain missing data
-print(di_df.isnull().any().sum(), ' / ', len(di_df.columns))
-
-### Check how many entries in total are missing 
-print(di_df.isnull().any(axis=1).sum(), ' / ', len(di_df))
-'''
 
 
 
@@ -85,10 +89,20 @@ for i in range(1, di_df.shape[1]):
 
 
 ### function to do replacement of a value in a column by simple mean imputation over the whole column 
-def impute_mean_byCol(df, field, val):
-    df[field] = df[field].replace(val, df[field].mean())
+# def impute_mean_byCol(df, field, val):
+#    df[field] = df[field].replace(val, df[field].mean())
 
 
+
+### compute z-scores by group for each column to look for outliers
+di_df_zscores = di_df.groupby('Outcome').transform(lambda x: (x - x.mean()) / x.std())
+
+### observation at index=579 has an obvious outlier (likely bad data) in SkinThickness
+print(di_df.iloc[579])
+
+
+### drop observation (row) with outlier for skin thickness
+di_df = di_df.drop(di_df.index[579])
 
 
 ### function to replace particular value in a feature column with mean of subset
@@ -109,6 +123,13 @@ for col in ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI']:
 
 ### check that min value in ['Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI'] is no longer 0
 di_df_imputed.describe()
+
+
+
+### another check on imputation results
+print(di_df_imputed.apply(pd.value_counts).head())
+
+
 
 
 ### visual check of imputation via violinplots for each column 
