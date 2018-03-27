@@ -14,6 +14,8 @@ parts of code adapted from code here:
 """
 
 
+c=pd.read_csv(StringIO(s))
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -35,8 +37,23 @@ di_df = pd.read_csv('C:\\Users\\David\\Documents\\Data Science Related\\Datasets
 # di_df = pd.read_csv('https://github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv', sep=',', header=[0], index_col=0)
 # di_df = pd.read_csv('https://raw.githubusercontent.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv')
 # di_df = pd.read_csv('https://raw.github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes.csv')
+# di_df = pd.read_csv('https://rawgit.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes_fromPandas.csv')
+# https://github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes_fromPandas.csv
 
-di_df.to_csv('C:\\Users\\David\\Documents\\Data Science Related\\Datasets\\pima-indians-diabetes\\diabetes_fromPandas.csv')
+'''
+### This doesn't work either for importing this csv from github
+from io import StringIO
+import requests
+url='https://github.com/meaningfromdata/Pima-Indians-Diabetes-Classification/blob/master/diabetes_fromPandas.csv'
+s=requests.get(url).text
+di_df=pd.read_csv(StringIO(s))
+'''
+
+
+di_df.to_csv('C:\\Users\\David\\Documents\\Data Science Related\\Datasets\\pima-indians-diabetes\\diabetes_fromPandas.csv', sep=',', index=False)
+
+
+test_df = pd.read_csv('C:\\Users\\David\\Documents\\Data Science Related\\Datasets\\pima-indians-diabetes\\diabetes_fromPandas.csv')
 
 
 
